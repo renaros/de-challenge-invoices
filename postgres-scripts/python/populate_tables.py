@@ -1,3 +1,4 @@
+import os
 import psycopg2
 import random
 from math import ceil
@@ -5,6 +6,7 @@ from faker import Faker
 from random import choice
 from numpy.random import randint
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
 
 
 # Number of customers to be added
@@ -72,11 +74,13 @@ if __name__ == "__main__":
     Faker.seed(0)
     faker_obj = Faker(['en_US'])
 
+    load_dotenv() # load environment variable file
+
     # PostgreSQL connection details
     pgconn = psycopg2.connect(
-        dbname="de_challenge",
-        user="de_user",
-        password="pg123",
+        dbname=os.getenv('POSTGRES_DB'),
+        user=os.getenv('POSTGRES_USER'),
+        password=os.getenv('POSTGRES_PASSWORD'),
         host="127.0.0.1",
         port="5432"
     )
