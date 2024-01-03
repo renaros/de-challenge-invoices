@@ -7,22 +7,70 @@ services:
       - "5432:5432"
     env_file:
       - .env
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "de_user"]
+      interval: 5s
+      retries: 5
     volumes:
       - ./postgres-scripts/sql:/docker-entrypoint-initdb.d
     networks:
       - de-challenge-network
     
   minio:
-    image: minio/minio:latest
+    image: docker.io/bitnami/minio:latest
     ports:
       - "9000:9000"
+      - "9001:9001"
     env_file:
       - .env
-    command: server /data
     volumes:
       - minio_data:/data
     depends_on:
       - postgres
+    networks:
+      - de-challenge-network
+
+  airflow-webserver:
+    build: .
+    command: webserver
+    entrypoint: ./scripts/entrypoint.sh
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 30s
+      retries: 5
+    env_file:
+      - .env
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/scripts:/opt/airflow/scripts
+      - airflow-logs-volume:/opt/airflow/logs
+      - airflow-plugins-volume:/opt/airflow/plugins
+    ports:
+      - "8080:8080"
+    networks:
+      - de-challenge-network
+
+  airflow-scheduler:
+    build: .
+    command: scheduler
+    depends_on:
+      postgres:
+        condition: service_healthy
+      airflow-webserver:
+        condition: service_healthy
+    env_file:
+      - .env
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/scripts:/opt/airflow/scripts
+      - airflow-logs-volume:/opt/airflow/logs
+      - airflow-plugins-volume:/opt/airflow/plugins
+    ports:
+      - "8793:8793"
     networks:
       - de-challenge-network
 
@@ -43,9 +91,21 @@ services:
       - zookeeper
     networks:
       - de-challenge-network
+  
+  kafka-manager:
+    image: sheepkiller/kafka-manager:latest
+    ports:
+      - "9093:9000"
+    environment:
+      ZK_HOSTS: "zookeeper:2181"
+    depends_on:
+      - kafka
+      - zookeeper
 
 volumes:
   minio_data:
+  airflow-logs-volume:
+  airflow-plugins-volume:
 
 networks:
   de-challenge-network:

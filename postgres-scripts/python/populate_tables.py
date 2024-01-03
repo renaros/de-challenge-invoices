@@ -10,11 +10,16 @@ from dotenv import load_dotenv
 
 
 # Number of customers to be added
-num_customers = 10000
-num_invoices = 1000000
-max_invoices_inserted_per_statement = 10000
+num_customers = 1000
+num_invoices = 50000
+max_invoices_inserted_per_statement = 50000
 
 def populate_customers(pgconn, faker_obj: Faker) -> None:
+    """
+    Function to populate customers table with mockup information
+    @param pgconn: connection to postgres
+    @param faker_obj: faker object responsible for creating random issue dates
+    """
     customer_list_str = ','.join([f"('{faker_obj.company()}')" for _ in range(num_customers)])
 
     cur = pgconn.cursor()
@@ -32,7 +37,11 @@ def populate_customers(pgconn, faker_obj: Faker) -> None:
 
 
 def populate_invoices(pgconn, faker_obj: Faker) -> None:
-
+    """
+    Function to populate invoices table with mockup information
+    @param pgconn: connection to postgres
+    @param faker_obj: faker object responsible for creating random issue dates
+    """
     cur = pgconn.cursor()
     try:
         invoices_created = 0
@@ -78,7 +87,7 @@ if __name__ == "__main__":
 
     # PostgreSQL connection details
     pgconn = psycopg2.connect(
-        dbname=os.getenv('POSTGRES_DB'),
+        dbname="de_challenge",
         user=os.getenv('POSTGRES_USER'),
         password=os.getenv('POSTGRES_PASSWORD'),
         host="127.0.0.1",

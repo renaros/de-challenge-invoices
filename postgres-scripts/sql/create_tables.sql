@@ -1,3 +1,14 @@
+-- ## Airflow ## --
+DROP DATABASE IF EXISTS airflow;
+CREATE DATABASE airflow OWNER de_user;
+
+-- ## Source database ## --
+DROP DATABASE IF EXISTS de_challenge;
+CREATE DATABASE de_challenge OWNER de_user;
+
+-- ## Create tables ## --
+\connect de_challenge;
+
 CREATE TABLE customers(
     customer_id BIGINT GENERATED ALWAYS AS IDENTITY,
     customer_name VARCHAR(255) NOT NULL,
