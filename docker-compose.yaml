@@ -1,0 +1,52 @@
+version: '3'
+
+services:
+  postgres:
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    volumes:
+      - ./postgres-scripts/sql:/docker-entrypoint-initdb.d
+    networks:
+      - de-challenge-network
+    
+  minio:
+    image: minio/minio:latest
+    ports:
+      - "9000:9000"
+    env_file:
+      - .env
+    command: server /data
+    volumes:
+      - minio_data:/data
+    depends_on:
+      - postgres
+    networks:
+      - de-challenge-network
+
+  zookeeper:
+    image: wurstmeister/zookeeper:latest
+    ports:
+      - "2181:2181"
+    networks:
+      - de-challenge-network
+  
+  kafka:
+    image: wurstmeister/kafka:latest
+    ports:
+      - "9092:9092"
+    env_file:
+      - .env
+    depends_on:
+      - zookeeper
+    networks:
+      - de-challenge-network
+
+volumes:
+  minio_data:
+
+networks:
+  de-challenge-network:
+    driver: bridge
