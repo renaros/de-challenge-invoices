@@ -1,7 +1,4 @@
 #!/usr/bin/env bash
-# pip install pyspark
-# apt install default-jdk
-
 airflow db init
 airflow db upgrade
 

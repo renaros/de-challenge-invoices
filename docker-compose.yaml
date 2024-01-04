@@ -101,6 +101,8 @@ services:
     depends_on:
       - kafka
       - zookeeper
+    networks:
+      - de-challenge-network
 
 volumes:
   minio_data:

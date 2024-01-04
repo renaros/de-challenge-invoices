@@ -3,7 +3,7 @@ Repository for invoices data engineering challenge.
 
 ## Problem description
 This challenge consists of a table that stores information related to invoices that customers send and receive between each other, and the idea is to provide an architecture that is scalable and efficient to manage this data.
-The table is stored in a RDBMS (the example I'm using on this repository is using Postgres) and the volume is growing fast, and is composed by the following columns:
+The table is stored in a RDBMS (for this exercise I'm using Postgres) and the volume is growing fast. The structure uses the following columns:
 * invoice id: unique id by invoice
 * issue date: the date and time where the invoice was created
 * issuer id: customer id that sent the invoice
@@ -11,7 +11,7 @@ The table is stored in a RDBMS (the example I'm using on this repository is usin
 * amount: amount to be paid, in USD
 
 ### Use cases
-Some use cases are:
+Some use cases for this table are:
 * Consume one invoice by its id
 * Group invoices for the last n months by business id (or customer id)
 * Join this table with other sources for analytics purposes (not necessarily structured data)
@@ -37,3 +37,6 @@ In this case, the fastest and easiest approach would be to index the table by in
 3. Run the docker compose file to create the environment: `docker compose up -d`
 4. Edit the python file [populate_tables.py](populate_tables.py) in order to adjust the amount of customers and invoices you want to create. Run the file using the command `python3 ./postgres-scripts/python/populate_tables.py`.
 
+## Q&A
+Q: Why not creating spark containers in the docker composer file?
+A: My computer was not being able to handle this amount of containers :)
