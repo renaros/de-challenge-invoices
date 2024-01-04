@@ -1,4 +1,4 @@
-# invoices-de-challenge
+# Invoices Data Engineering Challenge
 Repository for invoices data engineering challenge.
 
 ## Problem description
