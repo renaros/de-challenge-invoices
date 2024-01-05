@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+"""
+This script is responsible for inserting data into the source tables.
+You can adjust the amount of customers / invoices to be created by setting the parameters below the imports.
+Usage: python3 ./postgres-scripts/python/populate_tables.py (assuming that you are on the root folder of the project)
+"""
 import os
 import psycopg2
 import random
@@ -9,7 +15,7 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
 
-# Number of customers to be added
+# Parameters to set amount of customers and invoices to be added (and how many by interaction)
 num_customers = 1000
 num_invoices = 50000
 max_invoices_inserted_per_statement = 50000
@@ -77,6 +83,7 @@ def populate_invoices(pgconn, faker_obj: Faker) -> None:
         print(f"Error: {e}")
     finally:
         cur.close()
+
 
 if __name__ == "__main__":
     

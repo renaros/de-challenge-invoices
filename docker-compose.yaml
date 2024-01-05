@@ -2,7 +2,10 @@ version: '3'
 
 services:
   postgres:
-    image: postgres:latest
+    build:
+      context: .
+      dockerfile: Dockerfile_Postgres
+    container_name: postgres
     ports:
       - "5432:5432"
     env_file:
@@ -18,6 +21,7 @@ services:
     
   minio:
     image: docker.io/bitnami/minio:latest
+    container_name: minio
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -31,7 +35,10 @@ services:
       - de-challenge-network
 
   airflow-webserver:
-    build: .
+    build:
+        context: .
+        dockerfile: Dockerfile_Airflow
+    container_name: airflow-webserver
     command: webserver
     entrypoint: ./scripts/entrypoint.sh
     depends_on:
@@ -55,7 +62,10 @@ services:
       - de-challenge-network
 
   airflow-scheduler:
-    build: .
+    build:
+        context: .
+        dockerfile: Dockerfile_Airflow
+    container_name: airflow-scheduler
     command: scheduler
     depends_on:
       postgres:
@@ -75,32 +85,48 @@ services:
       - de-challenge-network
 
   zookeeper:
-    image: wurstmeister/zookeeper:latest
+    image: debezium/zookeeper:1.6
+    container_name: zookeeper
     ports:
-      - "2181:2181"
+      - 2181:2181
     networks:
       - de-challenge-network
-  
+
   kafka:
-    image: wurstmeister/kafka:latest
+    image: debezium/kafka:1.6
+    container_name: kafka
     ports:
       - "9092:9092"
-    env_file:
-      - .env
-    depends_on:
+    links:
       - zookeeper
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: ${HOST_IP}
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_DELETE_TOPIC_ENABLE: 'true'
+      ZOOKEEPER_CONNECT: zookeeper:2181
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    hostname: kafka
     networks:
       - de-challenge-network
-  
-  kafka-manager:
-    image: sheepkiller/kafka-manager:latest
+
+  kafka-postgres-connector:
+    image: debezium/connect:1.6
+    container_name: debezium
     ports:
-      - "9093:9000"
-    environment:
-      ZK_HOSTS: "zookeeper:2181"
+      - 9090:8083
+    links:
+      - kafka
     depends_on:
       - kafka
-      - zookeeper
+      - postgres
+    environment:
+      - BOOTSTRAP_SERVERS=kafka:9092
+      - GROUP_ID=pg
+      - CONFIG_STORAGE_TOPIC=pg_connect_configs
+      - OFFSET_STORAGE_TOPIC=pg_connect_offsets
+      - STATUS_STORAGE_TOPIC=pg_connect_statuses
     networks:
       - de-challenge-network
 
