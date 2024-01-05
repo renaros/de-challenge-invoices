@@ -102,12 +102,15 @@ Before running the steps below, please make sure to run the script to insert moc
 2. Start the DAG [./airflow/dags/dag_invoice_by_business.py](airflow/dags/dag_invoice_by_business.py) by accessing the [http://localhost:8080/dags/dag_invoice_by_business/grid](DAG detail link) and then clicking the toggle button on the top left.
 
 ![Activate DAG](https://github.com/renaros/de-challenge-invoices/blob/main/readme_images/airflow-activate-dag.jpg)
+
 3. Wait until all steps are green.
 
 ![Airflow all green](https://github.com/renaros/de-challenge-invoices/blob/main/readme_images/airflow-all-green.jpg)
+
 4. Access your MinIO instance using the link [http://localhost:9091](http://localhost:9091), providing your credentials (that should be set in your `.env` file). Access your [http://localhost:9001/browser/de-challenge](bucket details) and you should see a folder `invoice_by_business`. Inside this folder you should see another folder with the current month and the parquet file inside it.
 
 ![Minio folder](https://github.com/renaros/de-challenge-invoices/blob/main/readme_images/minio-folder.jpg)
+
 5. If you want to reprocess / backfill a particular month, you can run the command in your local console (outside any container):
 `docker exec -it airflow-webserver airflow tasks test dag_invoice_by_business query_source_table 'YYYY-MM-01'`
 It will create a new folder in de_challenge bucket in MinIO with the exported information.
@@ -123,6 +126,7 @@ It will create a new folder in de_challenge bucket in MinIO with the exported in
 `docker exec -it kafka ./bin/kafka-topics.sh --bootstrap-server=kafka:9092 --list --exclude-internal`
 
 ![Kafka topic created](https://github.com/renaros/de-challenge-invoices/blob/main/readme_images/kafka-topic-created.jpg)
+
 5. You can also check the number of messages in your Kafka topic by running:
 `docker exec -it kafka ./bin/kafka-run-class.sh kafka.tools.GetOffsetShell --broker-list kafka:9092 --topic postgres.public.invoices | awk -F  ":" '{sum += $3} END {print "Result: "sum}'`
 6. Last step is to run the consumer script to observe the streaming happening in real time.
