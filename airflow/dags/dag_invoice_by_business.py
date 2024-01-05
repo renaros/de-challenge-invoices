@@ -24,6 +24,7 @@ dag_documentation_md = "This DAG is responsible for reading data from invoices t
 
 ## DAG ##
 @dag(schedule="@daily", default_args=default_args, catchup=False, doc_md=dag_documentation_md, tags=["challenge", "invoices"])
+
 def dag_invoice_by_business():
 
     start_process_task = DummyOperator(
@@ -104,6 +105,7 @@ def dag_invoice_by_business():
     end_process_task = DummyOperator(
         task_id="end_process"
     )
+
 
     # DAG workflow
     start_process_task >> query_source_table_task
