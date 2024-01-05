@@ -1,4 +1,7 @@
-import logging
+#!/usr/bin/env python
+"""
+This DAG is responsible for reading data from invoices table and transforming the information into parquet files in MinIO.
+"""
 from datetime import datetime, timedelta
 
 from pyspark.sql import SparkSession
@@ -17,9 +20,11 @@ default_args = {
     'retries': 0,
     'retry_delay': timedelta(minutes=5)
 }
-logger = logging.getLogger(__name__)
+dag_documentation_md = "This DAG is responsible for reading data from invoices table and transforming the information into parquet files in MinIO."
 
-@dag(schedule=None, default_args=default_args, catchup=False, tags=["challenge", "invoices"])
+## DAG ##
+@dag(schedule="@daily", default_args=default_args, catchup=False, doc_md=dag_documentation_md, tags=["challenge", "invoices"])
+
 def dag_invoice_by_business():
 
     start_process_task = DummyOperator(
@@ -27,15 +32,12 @@ def dag_invoice_by_business():
     )
 
     @task
-    def test():
-        pg_connection_info = BaseHook.get_connection('postgres_de_challenge')
-        logger.info(pg_connection_info.__dict__)
-        minio_connection_info = BaseHook.get_connection('minio_de_challenge')
-        logger.info(minio_connection_info.__dict__)
-    test_task = test()
-
-    @task
     def query_source_table(**context):
+        """
+        Function responsible for querying Postgres and generating parquet files
+        I'm performing all operations on the same file because it's simple and not being used anywhere else,
+        but ideally we should separate this into a separate pyspark script and run it through SparkOperator.
+        """
 
         # uses execution date in case we want to backfill previous months
         execution_date = datetime.strptime(context['ds'], '%Y-%m-%d')
@@ -104,6 +106,8 @@ def dag_invoice_by_business():
         task_id="end_process"
     )
 
+
+    # DAG workflow
     start_process_task >> query_source_table_task
     query_source_table_task >> end_process_task
 

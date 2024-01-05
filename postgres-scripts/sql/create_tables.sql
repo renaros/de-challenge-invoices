@@ -1,3 +1,7 @@
+-- ## Setup for Debezium ## --
+ALTER SYSTEM SET wal_level = logical;
+ALTER SYSTEM SET shared_preload_libraries = 'wal2json';
+
 -- ## Airflow ## --
 DROP DATABASE IF EXISTS airflow;
 CREATE DATABASE airflow OWNER de_user;
@@ -25,3 +29,5 @@ CREATE TABLE invoices (
     CONSTRAINT fk_receiver_id FOREIGN KEY(receiver_id) REFERENCES customers(customer_id),
     PRIMARY KEY(invoice_id)
 );
+
+ALTER TABLE invoices REPLICA IDENTITY USING INDEX invoices_pkey;

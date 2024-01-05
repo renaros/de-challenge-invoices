@@ -1,0 +1,16 @@
+{
+    "name": "pg-invoices-source",
+    "config": {
+        "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+        "database.hostname": "postgres",
+        "database.port": "5432",
+        "database.user": "<PGUSER>",
+        "database.password": "<PGPWD>",
+        "database.dbname": "de_challenge",
+        "database.server.name": "postgres",
+        "plugin.name": "wal2json",
+        "table.include.list": "public.invoices",
+        "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+        "decimal.handling.mode": "string"
+    }
+}
