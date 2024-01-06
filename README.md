@@ -14,30 +14,37 @@ Repository for invoices data engineering challenge.
 * [Challenges during development](#challenges-during-the-development)
 
 ## Problem Statement
-This challenge consists of a table that stores information related to invoices that customers send and receive between each other, and the idea is to provide an architecture that is scalable and efficient to manage this data.
-The table is stored in a RDBMS (for this exercise I'm using Postgres) and the volume is growing fast. The structure uses the following columns:
-* _invoice id_: unique id by invoice
-* _issue date_: the date and time where the invoice was created
-* _issuer id_: customer id that sent the invoice
-* _receiver id_: customer id that received the invoice
-* _amount_: amount to be paid, in USD
+This financial company facilitates client interactions through transactions, recorded in the system as invoices. 
+These invoices are currently stored in a traditional transactional RDBMS table, however, the volume is growing rapidly, posing complexities in managing distinct use cases within the company.
+The invoice table has the following attributes:
+* _invoice id_: unique id by invoice.
+* _issue date_: the date and time where the invoice was created.
+* _issuer id_: customer id that sent the invoice.
+* _receiver id_: customer id that received the invoice.
+* _amount_: amount to be paid, in USD.
+The challenge is to define an architecture that addresses scalability issues and cover all use cases listed below in the next section.
+Key considerations include:
+* The data source cannot be migrated to another technology in the short-term.
+* Solution performance is very relevant.
+* The information that needs to be joined with the source data are diverse and not necessarily structured.
+* The proposed solution must be deployable and maintainable in the cloud, though not necessarily cloud-native.
 
 ## Use Cases
 Some use cases for this table are:
 
 ### Use Case 1: Consume one invoice by its ID
-Here I'm splitting into short, medium and long term solutions since migration is not possible on the short term.
+Migrating the entire source data is not possible on the short-term, so the idea here is to have a 2 step approach:
 
 #### Proposed Architecture
-* _Short-term_: In this case, the fastest and easiest approach would be to just index the table by invoice id. This way we can speed up the searches with not much effort and using the original architecture.
-* _Medium/long-term_: Additionally, we could implement a caching layer like Redis or Memcached to enhance performance by storing frequently accessed invoices in memory.
-We also could consider migrating this table to distributed database systems - such as Amazon DynamoDB - in order to have better scalability.
+* _Short-term_: In this case, the fastest and easiest action would be to just index the table by invoice id. This way we can speed up the searches with not much effort and using the original architecture. Additionally, we could implement a caching layer like Redis or Memcached to enhance performance by storing frequently accessed invoices in memory.
+* _Medium/long-term_: Consider migrating this table to distributed database systems - such as Amazon DynamoDB - in order to have better scalability.
 
 ### Use Case 2: Group invoices for the last n months by business id (or customer id)
-For this scenario I'm assuming a analytics approach, updating the stats on a schedule (batching).
+In this scenario, I am considering an analytics use case focused on updating statistics on a scheduled basis.
 
 #### Proposed Architecture
-On this scenario I suggest an orchestrator like Airflow to run the jobs on a schedule. The pipeline would be responsible for:
+Here I suggest an orchestrator like Airflow to run the jobs on a schedule, Spark for processing, MinIO (or S3) as the storage layer and Hive (or Redshift Spectrum) to query the output. 
+The pipeline in Airflow would be responsible for:
 * Querying the source table (that can be a replica to not impact production table).
 * Apply the necessary transformations (in my example I'm developing the logic directly in the query)
 * Using PySpark the results are exported to parquet files and stored in MinIO, partitioned by month and business id. 
@@ -55,7 +62,7 @@ The sooner we run risk models on the invoices the better to prevent fraud and st
 
 #### Proposed Architecture
 The solution I developed is using a Kafka topic to manage the messages from invoice and Debezium for CDC (change data capture).
-Using this approach we are able to stream each insert in the table and consume this information by calling an algorithm for risk model.
+Using this approach we are able to stream each insert in the table and consume this information by executing an algorithm for risk model.
 There are some extra advantages with this approach, for example:
 * Performing extra tasks besides running the risk model, such as notifying the client about status change or updating analytics KPIs near real time
 * Can be easily hosted in the cloud, using Amazon MSK or alternatives such as Amazon Kinesis.
