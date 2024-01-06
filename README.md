@@ -22,6 +22,7 @@ The invoice table has the following attributes:
 * _issuer id_: customer id that sent the invoice.
 * _receiver id_: customer id that received the invoice.
 * _amount_: amount to be paid, in USD.
+
 The challenge is to define an architecture that addresses scalability issues and cover all use cases listed below in the next section.
 Key considerations include:
 * The data source cannot be migrated to another technology in the short-term.
