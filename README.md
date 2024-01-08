@@ -1,5 +1,5 @@
 # Data Engineering Challenge - Invoices
-Repository for invoices data engineering challenge.
+Repository for invoices - data engineering challenge.
 
 ## Sections
 * [Problem statement](#problem-statement)
@@ -15,7 +15,7 @@ Repository for invoices data engineering challenge.
 
 ## Problem Statement
 This financial company facilitates client interactions through transactions, recorded in the system as invoices. 
-These invoices are currently stored in a traditional transactional RDBMS table, however, the volume is growing rapidly, posing complexities in managing distinct use cases within the company.
+These invoices are currently stored in a traditional transactional RDBMS table. However, the volume is growing rapidly, posing complexities in managing distinct use cases within the company.
 The invoice table has the following attributes:
 * _invoice id_: unique id by invoice.
 * _issue date_: the date and time where the invoice was created.
@@ -27,17 +27,17 @@ The challenge is to define an architecture that addresses scalability issues and
 Key considerations include:
 * The data source cannot be migrated to another technology in the short-term.
 * Solution performance is very relevant.
-* The information that needs to be joined with the source data are diverse and not necessarily structured.
+* The information that needs to be joined with the source data is diverse and not necessarily structured.
 * The proposed solution must be deployable and maintainable in the cloud, though not necessarily cloud-native.
 
 ## Use Cases
 Some use cases for this table are:
 
 ### Use Case 1: Consume one invoice by its ID
-Migrating the entire source data is not possible on the short-term, so the idea here is to have a 2 step approach:
+Migrating the entire source data is not possible on the short-term, so the idea is to implement a 2 step approach:
 
 #### Proposed Architecture
-* _Short-term_: In this case, the fastest and easiest action would be to just index the table by invoice id. This way we can speed up the searches with not much effort and using the original architecture. Additionally, we could implement a caching layer like Redis or Memcached to enhance performance by storing frequently accessed invoices in memory.
+* _Short-term_: In this case, the fastest and easiest action would be to just index the table by invoice id. This way we can speed up the searches using the original architecture, without investing much effort. Additionally, we could implement a caching layer like Redis or Memcached to enhance performance by storing frequently accessed invoices in memory.
 * _Medium/long-term_: Consider migrating this table to distributed database systems - such as Amazon DynamoDB - in order to have better scalability.
 
 ### Use Case 2: Group invoices for the last n months by business id (or customer id)
@@ -46,24 +46,24 @@ In this scenario, I am considering an analytics use case focused on updating sta
 #### Proposed Architecture
 Here I suggest an orchestrator like Airflow to run the jobs on a schedule, Spark for processing, MinIO (or S3) as the storage layer and Hive (or Redshift Spectrum) to query the output. 
 The pipeline in Airflow would be responsible for:
-* Querying the source table (that can be a replica to not impact production table).
+* Querying the source table (that can be a replica to not impact the production table).
 * Apply the necessary transformations (in my example I'm developing the logic directly in the query)
 * Using PySpark the results are exported to parquet files and stored in MinIO, partitioned by month and business id. 
 The advantage of this approach is that parquet files can be read by Redshift Spectrum for analytics purposes (ad-hoc analysis and dashboards).
-Thinking on a cloud environment, the same result could be obtained using Airflow hosted on EC2 or AWS Glue for orchestration, Spark instances in AWS, S3 for storage and Redshift Spectrum for Data Lake / Warehousing (or its equivalent in other cloud providers).
+Thinking in a cloud environment, the same result could be obtained using Airflow hosted on EC2 or AWS Glue for orchestration, Spark instances in AWS, S3 for storage and Redshift Spectrum for Data Lake / Warehousing (or its equivalent in other cloud providers).
 
 ### Use Case 3: Join this table with other sources for analytics purposes (not necessarily structured data)
-Here I'm assuming other sources could use ETL processes to store information into a Redshift instance or using S3 to store unstructured data.
+I'm assuming other sources could use ETL processes to store information into a Redshift instance or using S3 to store unstructured data.
 
 #### Proposed Architecture
 As described before in use case 2, using files hosted in S3 with Redshift Spectrum and structured tables in Redshift allows us to join structured and unstructured tables together, making it possible to provide better insights from data.
 
 ### Use Case 4: Execute a risk model whenever a new invoice is created
-The sooner we run risk models on the invoices the better to prevent fraud and strange behaviours, so I believe the best approach here is to use some kind of streaming near real time approach.
+The sooner we run risk models on the invoices, the better it is to prevent fraud and strange behaviors. Therefore, the best approach here would be using some kind of streaming near real time approach.
 
 #### Proposed Architecture
 The solution I developed is using a Kafka topic to manage the messages from invoice and Debezium for CDC (change data capture).
-Using this approach we are able to stream each insert in the table and consume this information by executing an algorithm for risk model.
+Using this approach we are able to stream each insert in the table and consume this information by executing an algorithm for the risk model.
 There are some extra advantages with this approach, for example:
 * Performing extra tasks besides running the risk model, such as notifying the client about status change or updating analytics KPIs near real time
 * Can be easily hosted in the cloud, using Amazon MSK or alternatives such as Amazon Kinesis.
@@ -84,7 +84,7 @@ The solution I developed in this repository aims to implement and be a proof of 
     * [./airflow/scripts/entrypoint.sh](airflow/scripts/entrypoint.sh): Bash script that runs on the Airflow container after it gets created, basically creates an admin user and starts the service.
     * [./postgres-scripts/sql/create_tables.sql](postgres-scripts/sql/create_tables.sql): SQL script that runs on Postgres right after the container gets created
 * Data engineering related files:
-    * [./airflow/dags/dag_invoice_by_business.py](airflow/dags/dag_invoice_by_business.py): DAG responsible for querying Postgres and generate parquet files in MinIO to be used in analytics.
+    * [./airflow/dags/dag_invoice_by_business.py](airflow/dags/dag_invoice_by_business.py): DAG responsible for querying Postgres and generating parquet files in MinIO to be used in analytics.
     * [./streaming/invoice_consumer.py](streaming/invoice_consumer.py): Python script that simulates a consumer for data streamed in Kafka.
 
 ### How to Run the Code
@@ -121,10 +121,10 @@ Before running the steps below, please make sure to run the script to insert moc
 
 5. If you want to reprocess / backfill a particular month, you can run the command in your local console (outside any container):
 `docker exec -it airflow-webserver airflow tasks test dag_invoice_by_business query_source_table 'YYYY-MM-01'`
-It will create a new folder in de_challenge bucket in MinIO with the exported information.
+It will create a new folder in the de_challenge bucket in MinIO with the exported information.
 
 #### How to test stream data (Postgres -> Debezium -> Kafka -> Consumer)
-1. Run the command below to setup Debezium. This will create the Kafka topic `postgres.public.invoices` automatically after any record gets inserted into the invoices table.
+1. Run the command below to set up Debezium. This will create the Kafka topic `postgres.public.invoices` automatically after any record gets inserted into the invoices table.
 `curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" localhost:9090/connectors/ -d @debezium/pg-source-config.json`
 2. Run the command below in Postgres to insert mockup clients into the customers table:
 `insert into public.customers (customer_name) values ('A'), ('B');`
@@ -139,12 +139,14 @@ It will create a new folder in de_challenge bucket in MinIO with the exported in
 `docker exec -it kafka ./bin/kafka-run-class.sh kafka.tools.GetOffsetShell --broker-list kafka:9092 --topic postgres.public.invoices | awk -F  ":" '{sum += $3} END {print "Result: "sum}'`
 6. Last step is to run the consumer script to observe the streaming happening in real time.
 `python3 ./streaming/invoice_consumer.py`
-After running the command above, run another insert statements in Postgrees to check the messages arriving into the consumer. Use `CTRL+C` to stop the program.
+After running the command above, run another insert statement in Postgres to check the messages arriving into the consumer. Use `CTRL+C` to stop the program.
 
 ![Kafka streamed insert](https://github.com/renaros/de-challenge-invoices/blob/main/readme_images/kafka-inserted.jpg)
 
 ## Challenges during the development
 * I could not use separate Spark containers in the docker compose file because my computer was not able to handle it :)
-* It took me some time to make Airflow communicate to MinIO, the environment variables were not working properly. After lots of try and error it finally worked, and I could use the environment variables for everything and no manual adjustments are needed.
-* Debezium was very challenging make it work, the library was not loading, then the wal_level had to be set to logical instead of replication and only after that it worked.
-* Parsing the Kafka message was also challenging, decimal values are transformed into bytes by default in Debezium and it required lots of try and error to fix that. In the end I changed the configuration to transform decimals to string and it worked like a charm. Besides that, issue_date was failing conversion because it is in unix timestamp but microseconds, and the function to convert it in PySpark uses seconds as a reference.
+* It took me some time to make Airflow communicate to MinIO, the environment variables were not working properly. After lots of trial and error it finally worked, and I could use the environment variables for everything and no manual adjustments were needed.
+* Debezium was very challenging to make it work, the library was not loading, then the wal_level had to be set to logical instead of replication and only after that it worked.
+* Parsing the Kafka message was also challenging, decimal values are transformed into bytes by default in Debezium and it required lots of trial and error to fix that. In the end I changed the configuration to transform decimals to string and it worked like a charm. Besides that, issue_date was failing conversion because it is in unix timestamp but microseconds, and the function to convert it in PySpark uses seconds as a reference.
+
+
