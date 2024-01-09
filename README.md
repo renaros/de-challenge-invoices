@@ -84,7 +84,8 @@ The solution I developed in this repository aims to implement and be a proof of 
     * [./airflow/scripts/entrypoint.sh](airflow/scripts/entrypoint.sh): Bash script that runs on the Airflow container after it gets created, basically creates an admin user and starts the service.
     * [./postgres-scripts/sql/create_tables.sql](postgres-scripts/sql/create_tables.sql): SQL script that runs on Postgres right after the container gets created
 * Data engineering related files:
-    * [./airflow/dags/dag_invoice_by_business.py](airflow/dags/dag_invoice_by_business.py): DAG responsible for querying Postgres and generating parquet files in MinIO to be used in analytics.
+    * [./airflow/dags/dag_invoice_by_business.py](airflow/dags/dag_invoice_by_business.py): DAG responsible for orchestrating and calling the script to process the parquet files.
+    * [./airflow/dags/pyspark_scripts/invoice_by_business_etl.py](airflow/dags/pyspark_scripts/invoice_by_business_etl.py): Pyspark script that actually queries Postgres and generate parquet files in MinIO to be used in analytics.
     * [./streaming/invoice_consumer.py](streaming/invoice_consumer.py): Python script that simulates a consumer for data streamed in Kafka.
 
 ### How to Run the Code
@@ -120,7 +121,7 @@ Before running the steps below, please make sure to run the script to insert moc
 ![Minio folder](https://github.com/renaros/de-challenge-invoices/blob/main/readme_images/minio-folder.jpg)
 
 5. If you want to reprocess / backfill a particular month, you can run the command in your local console (outside any container):
-`docker exec -it airflow-webserver airflow tasks test dag_invoice_by_business query_source_table 'YYYY-MM-01'`
+`docker exec -it airflow-webserver airflow tasks test dag_invoice_by_business invoice_by_business_etl 'YYYY-MM-01'`
 It will create a new folder in the de_challenge bucket in MinIO with the exported information.
 
 #### How to test stream data (Postgres -> Debezium -> Kafka -> Consumer)
