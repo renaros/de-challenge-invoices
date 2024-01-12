@@ -57,7 +57,7 @@ if __name__ == '__main__':
     partition_cols = ["issue_date_yearmonth"]
 
     # Write output to Parquet files in MinIO
-    output_path = f"s3a://de-challenge/invoice_by_business"
+    output_path = f"s3a://de-challenge/invoice_by_business/{execution_date_yearmonth_str}"
     result_df.write.mode("overwrite").partitionBy(partition_cols).parquet(output_path)
 
     # Stop SparkSession
