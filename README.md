@@ -100,7 +100,14 @@ The solution I developed in this repository aims to implement and be a proof of 
 2. Rename the file [pg-source-config.json.example](./debezium/pg-source-config.json.example) to `pg-source-config.json` and change the values accordingly
 3. Create a new Python3 virtual environment by running `python3 venv .venv`. After that, activate the environment (`source .venv/bin/activate`) and install the required libraries from [requirements.txt](requirements.txt), running `pip install -r requirements.txt`.
 4. Set execution permissions to Airflow's [entrypoint file](./airflow/scripts/entrypoint.sh), by running `sudo chmod +x airflow/scripts/entrypoint.sh`
-5. Run the docker compose file to create the environment: `docker compose up -d` (or `docker-compose up -d` depending on your docker compose version)
+5. Set the environment variable for Kafka: `export DOCKER_HOST_IP=$(/sbin/ip route|awk '/docker0 proto/ { print $9 }')`
+6. Create the custom images, running: 
+
+`docker build . -t de-challenge-invoices-postgres -f ./Dockerfile_Postgres`
+
+`docker build . -t de-challenge-invoices-airflow -f ./Dockerfile_Airflow`
+
+7. Run the docker compose file to create the environment: `docker compose up -d` (or `docker-compose up -d` depending on your docker compose version)
  
 #### How to insert mockup data into source tables in Postgres
 Edit the python file [populate_tables.py](populate_tables.py) in order to adjust the amount of customers and invoices you want to create. Run the file using the command `python3 ./postgres-scripts/python/populate_tables.py`.

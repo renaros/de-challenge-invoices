@@ -2,9 +2,7 @@ version: '3'
 
 services:
   postgres:
-    build:
-      context: .
-      dockerfile: Dockerfile_Postgres
+    image: de-challenge-invoices-postgres:latest
     container_name: postgres
     ports:
       - "5432:5432"
@@ -35,9 +33,7 @@ services:
       - de-challenge-network
 
   airflow-webserver:
-    build:
-        context: .
-        dockerfile: Dockerfile_Airflow
+    image: de-challenge-invoices-airflow:latest
     container_name: airflow-webserver
     command: webserver
     entrypoint: ./scripts/entrypoint.sh
@@ -62,9 +58,7 @@ services:
       - de-challenge-network
 
   airflow-scheduler:
-    build:
-        context: .
-        dockerfile: Dockerfile_Airflow
+    image: de-challenge-invoices-airflow:latest
     container_name: airflow-scheduler
     command: scheduler
     depends_on:
@@ -100,7 +94,7 @@ services:
     links:
       - zookeeper
     environment:
-      KAFKA_ADVERTISED_HOST_NAME: ${HOST_IP}
+      KAFKA_ADVERTISED_HOST_NAME: ${DOCKER_HOST_IP}
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
       KAFKA_DELETE_TOPIC_ENABLE: 'true'
